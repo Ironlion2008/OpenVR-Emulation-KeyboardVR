@@ -1,0 +1,19 @@
+[
+  {
+    "language_tag": "en_US",
+    "openvr-emulator_controller": "OpenVR Emulator Controller",
+    "openvr-emulator_tracker": "OpenVR Emulator Tracker",
+    "openvr-emulator_basestation": "OpenVR Emulator BaseStation",
+    "/input/a": "A Button",
+    "/input/b": "B Button",
+    "/input/x": "X Button",
+    "/input/y": "Y Button",
+    "/input/system": "System Button",
+    "/input/trackpad": "Trackpad",
+    "/input/joystick": "Joystick",
+    "/input/skeleton": "Skeleton",
+    "/input/trigger": "Trigger",
+    "/output/haptic": "Haptic"
+  }
+]
+

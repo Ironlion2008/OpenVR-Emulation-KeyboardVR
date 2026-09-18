@@ -1,0 +1,89 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {"major": 3, "minor": 16, "patch": 0},
+    "configurePresets": [
+        {
+            "name": "windows-msvc-base",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build",
+            "toolchainFile": "${sourceDir}/build/generators/conan_toolchain.cmake",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "cacheVariables": {
+                "ENABLE_CLANG_TIDY": "ON"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows-msvc-debug",
+            "displayName": "Windows MSVC Debug (VS 2022)",
+            "description": "Debug build — run scripts\\bootstrap.ps1 first.",
+            "inherits": "windows-msvc-base"
+        },
+        {
+            "name": "windows-msvc-release",
+            "displayName": "Windows MSVC Release (VS 2022)",
+            "description": "Release build — run scripts\\bootstrap.ps1 -Release first.",
+            "inherits": "windows-msvc-base"
+        },
+        {
+            "name": "ci-base",
+            "hidden": true,
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/build",
+            "toolchainFile": "${sourceDir}/build/generators/conan_toolchain.cmake",
+            "cacheVariables": {
+                "ENABLE_CLANG_TIDY": "ON",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "ci-debug",
+            "displayName": "CI Debug (Ninja)",
+            "inherits": "ci-base"
+        },
+        {
+            "name": "ci-release",
+            "displayName": "CI Release (Ninja)",
+            "inherits": "ci-base"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-msvc-debug",
+            "displayName": "Build Debug (VS 2022)",
+            "configurePreset": "windows-msvc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-msvc-release",
+            "displayName": "Build Release (VS 2022)",
+            "configurePreset": "windows-msvc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "ci-debug",
+            "displayName": "Build Debug (CI / Ninja)",
+            "configurePreset": "ci-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "ci-release",
+            "displayName": "Build Release (CI / Ninja)",
+            "configurePreset": "ci-release",
+            "configuration": "Release"
+        }
+    ]
+}

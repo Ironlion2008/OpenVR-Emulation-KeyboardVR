@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    name: Build & Test (${{ matrix.config }} / Windows / MSVC)
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Conan, Ninja, and clang-tidy
+        run: pip install conan ninja clang-tidy
+
+      - name: Set up MSVC environment (Ninja needs cl.exe on PATH)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Conan install
+        shell: pwsh
+        run: |
+          $env:CONAN_HOME = "${{ github.workspace }}\.conan2"
+          conan profile detect --force
+          conan install . --build=never -s compiler.cppstd=17 -c "tools.cmake.cmaketoolchain:generator=Ninja Multi-Config"
+
+      - name: CMake configure
+        shell: pwsh
+        run: cmake --preset ci-${{ matrix.config == 'Debug' && 'debug' || 'release' }}
+
+      - name: CMake build driver
+        shell: pwsh
+        # SteamVR deploy post-build step is skipped (no SteamVR on the runner).
+        run: cmake --build build --config ${{ matrix.config }} --target driver_openvr-emulator
+
+      - name: Run clang-tidy
+        shell: pwsh
+        run: |
+          # ilammy/msvc-dev-cmd prepends VS\VC\Tools\Llvm\x64\bin which shadows the
+          # pip-installed clang-tidy, so resolve it explicitly from the Python Scripts dir.
+          $PipTidy = python -c "import pathlib, sys; print(pathlib.Path(sys.executable).parent / 'Scripts' / 'clang-tidy.exe')"
+          if (-not (Test-Path $PipTidy)) { Write-Error "pip clang-tidy not found at: $PipTidy"; exit 1 }
+          Write-Host "clang-tidy: $PipTidy"
+          # Run clang-tidy on every .cpp in our source trees.
+          # clang-tidy -p build reads compile_commands.json (full "cl.exe ..." command)
+          # so it auto-detects cl-compatibility mode and /EHsc enables exceptions.
+          $Failed = $false
+          foreach ($File in (Get-ChildItem -Path "driver_files/src","preview_app","tests" -Include *.cpp -Recurse)) {
+            Write-Host ">> $($File.Name)"
+            & $PipTidy -p build $File.FullName
+            if ($LASTEXITCODE -ne 0) { $Failed = $true }
+          }
+          if ($Failed) { exit 1 }
+
+      - name: CMake build tests
+        shell: pwsh
+        # ConanCenter pre-built gtest binaries are Release-only (MD_DynamicRelease).
+        # Always build tests in Release to avoid LNK2038 CRT mismatch.
+        run: cmake --build build --config Release --target driver_tests
+
+      - name: Run tests
+        shell: pwsh
+        run: ctest --test-dir build --build-config Release --output-on-failure

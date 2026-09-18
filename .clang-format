@@ -1,0 +1,52 @@
+---
+Language:        Cpp
+BasedOnStyle:    Microsoft
+
+# 100 keeps diffs readable and fits two editor panes side-by-side (Microsoft default: 120)
+ColumnLimit:     100
+
+# Flush access modifiers with the class keyword; matches the 4-space IndentWidth
+# (Microsoft default: -2)
+AccessModifierOffset: -4
+
+# References follow pointer alignment: int& r  (Microsoft default leaves ReferenceAlignment unset)
+ReferenceAlignment: Pointer
+
+# Regroup and sort includes into three buckets: C headers, C++ stdlib, project
+SortIncludes:    CaseSensitive
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:       '^<.*\.h>'    # Windows / C system headers
+    Priority:    1
+  - Regex:       '^<.*>'       # C++ standard library
+    Priority:    2
+  - Regex:       '.*'          # project headers
+    Priority:    3
+
+# Break before the colon in ctor-initializer lists; pack all initializers on the
+# next line as a group rather than one-per-line (Microsoft defaults differ)
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList:         BeforeColon
+PackConstructorInitializers:  NextLine
+
+# Allow trivial inline getters/setters on one line (Microsoft default: None)
+AllowShortFunctionsOnASingleLine: Inline
+# Allow bodyless if without else on one line (Microsoft default: Never)
+AllowShortIfStatementsOnASingleLine: WithoutElse
+# Allow single-statement loops on one line (Microsoft default: false)
+AllowShortLoopsOnASingleLine: true
+
+# Indent case labels under switch (Microsoft default: false)
+IndentCaseLabels: true
+
+# One blank line between logical access-modifier groups; no blank line after the modifier
+# (Microsoft default: Never / Never)
+EmptyLineBeforeAccessModifier: LogicalBlock
+EmptyLineAfterAccessModifier:  Never
+
+# Two spaces before trailing // comments (Microsoft default: 1)
+SpacesBeforeTrailingComments:  2
+
+# Explicit C++20; the Microsoft base may resolve to an older standard
+Standard:        c++20
+...

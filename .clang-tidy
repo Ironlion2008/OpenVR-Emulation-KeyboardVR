@@ -1,0 +1,113 @@
+---
+# ──────────────────────────────────────────────────────────────────────────────
+# Globally disabled checks and their rationale.
+# Prefer NOLINT on specific lines where possible; only suppress globally when
+# the check fires in too many places to annotate individually.
+#
+# -cppcoreguidelines-pro-bounds-array-to-pointer-decay
+#     C arrays declared on specific lines have NOLINT for avoid-c-arrays, but
+#     every call site where the array decays to a pointer (lpszClassName,
+#     D3D11CreateDevice, ClearRenderTargetView, D3DCompile, …) would also need
+#     annotation.  The number of decay points makes global suppression cleaner.
+#
+# -cppcoreguidelines-pro-bounds-pointer-arithmetic
+#     D3D11 APIs such as PSSetShaderResources / RSSetViewports take a raw
+#     pointer-to-array-element as an output parameter; the pattern is required
+#     by the interface and cannot be avoided without wrapping the API.
+#
+# -clang-diagnostic-unused-command-line-argument
+#     Spurious "-Wno-…" flags injected by CMake are reported as unused by
+#     clang-tidy; this is a tooling artefact, not a source-code issue.
+#
+# -clang-diagnostic-missing-field-initializers
+#     {} initialisation of WinAPI/D3D11/OpenVR structs deliberately leaves some
+#     fields at zero; listing every field explicitly adds noise without benefit.
+#
+# -misc-const-correctness
+#     Enabling this generates pervasive changes across WinAPI/D3D11/COM code
+#     (HRESULT, BOOL, output-pointer patterns).  Suppressed globally; add
+#     NOLINT on individual lines if the check is wanted in a specific scope.
+#
+# -modernize-use-designated-initializers
+#     WinAPI/D3D11/OpenVR structs use {} + field-by-field assignment, which is
+#     idiomatic C++14/17.  Designated initialisers (C++20) add no safety here.
+#
+# -readability-inconsistent-declaration-parameter-name
+#     WinAPI function-pointer typedefs declare different parameter names than
+#     our driver implementations.  The mismatch is intentional and harmless.
+#
+# -readability-implicit-bool-conversion
+#     WinAPI returns BOOL (int); COM ComPtr exposes operator bool; both are
+#     widespread idiomatic patterns that cannot practically be annotated inline.
+# ──────────────────────────────────────────────────────────────────────────────
+Checks: >
+  bugprone-*,
+  cert-*,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -clang-diagnostic-unused-command-line-argument,
+  -clang-diagnostic-missing-field-initializers,
+  google-explicit-constructor,
+  misc-*,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -misc-no-recursion,
+  -misc-const-correctness,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-pass-by-value,
+  -modernize-use-designated-initializers,
+  performance-*,
+  readability-*,
+  -readability-identifier-length,
+  -readability-uppercase-literal-suffix,
+  -readability-inconsistent-declaration-parameter-name,
+  -readability-implicit-bool-conversion,
+
+WarningsAsErrors: "*"
+
+# Apply header checks to project sources only (exclude OpenVR / Windows SDK headers)
+HeaderFilterRegex: "driver_files.src|tests"
+
+FormatStyle: file
+
+CheckOptions:
+  # Naming conventions — Microsoft C++ style:
+  #   Namespaces:            PascalCase   (OpenVREmulatorDriver)
+  #   Classes/structs/enums: PascalCase   (VRDriver, HMDInputConfig)
+  #   Methods/functions:     PascalCase   (AddDevice, RunFrame)
+  #   Member variables:      m_camelCase  (m_lastFrameTime, m_didVibrate)
+  #   Static local vars:     camelCase    (instanceCount)
+  #   Parameters/locals:     camelCase    (device, poseData)
+  #   Constants/constexpr:   PascalCase   (MaxDevices)
+  #   Macros:                UPPER_CASE
+
+  - { key: readability-identifier-naming.NamespaceCase,                    value: CamelCase   }
+  - { key: readability-identifier-naming.ClassCase,                        value: CamelCase   }
+  - { key: readability-identifier-naming.StructCase,                       value: CamelCase   }
+  - { key: readability-identifier-naming.EnumCase,                         value: CamelCase   }
+  - { key: readability-identifier-naming.EnumConstantCase,                 value: CamelCase   }
+  - { key: readability-identifier-naming.TemplateParameterCase,            value: CamelCase   }
+  - { key: readability-identifier-naming.TypeAliasCase,                    value: CamelCase   }
+  - { key: readability-identifier-naming.TypedefCase,                      value: CamelCase   }
+  - { key: readability-identifier-naming.FunctionCase,                     value: CamelCase   }
+  - { key: readability-identifier-naming.MethodCase,                       value: CamelCase   }
+  - { key: readability-identifier-naming.VariableCase,                     value: camelBack   }
+  - { key: readability-identifier-naming.ParameterCase,                    value: camelBack   }
+  - { key: readability-identifier-naming.ClassMemberCase,                  value: camelBack   }
+  - { key: readability-identifier-naming.ClassMemberPrefix,                value: m_          }
+  - { key: readability-identifier-naming.StaticVariableCase,               value: camelBack   }
+  - { key: readability-identifier-naming.ConstantCase,                     value: CamelCase   }
+  - { key: readability-identifier-naming.ConstexprVariableCase,            value: CamelCase   }
+  - { key: readability-identifier-naming.GlobalConstantCase,               value: CamelCase   }
+  - { key: readability-identifier-naming.MemberConstantCase,               value: CamelCase   }
+  - { key: readability-identifier-naming.StaticConstantCase,               value: CamelCase   }
+  - { key: readability-identifier-naming.MacroDefinitionCase,              value: UPPER_CASE  }
+  - { key: readability-identifier-naming.MacroDefinitionIgnoredRegexp,     value: '^[A-Z]+(_[A-Z]+)*_$' }
+  - { key: readability-identifier-naming.LocalConstantCase,                value: camelBack               }
+  - { key: readability-identifier-naming.IgnoreMainLikeFunctions,          value: true        }
+
+  # Allow virtual default destructor without requiring all Rule-of-5 members
+  - { key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor, value: true }
+...

@@ -1,0 +1,12 @@
+# Inherits the root .clang-tidy and relaxes rules that are intentionally
+# incompatible with test code:
+#
+#   - Magic numbers: test assertions require literal expected values
+#     (e.g. EXPECT_FLOAT_EQ(cfg.hmd.look_speed, 2.5F)).  Replacing them
+#     with named constants would reduce readability without adding safety.
+
+InheritParentConfig: true
+
+Checks: >
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
